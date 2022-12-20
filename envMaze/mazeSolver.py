@@ -2,6 +2,7 @@
 import pygame #pygame==2.4.3.dev8 version because of pyton 3.44
 from sys import exit
 from res import *
+import random
 
 #mazeSolver display 
 displayWidth=600
@@ -83,25 +84,51 @@ class Individual:
         cell = cell_y*20 + cell_x
         return cell
 
-    def update(self, direction):
+    def move(self, direction, grid_cells):
         if direction == 'top':
-            self.y += -cellSize
-            self.cell = self.getCell()
+            actualCell=self.getCell()
+            for cell in grid_cells:
+                if cell.indx==actualCell:
+                    if not cell.walls['top']:
+                        self.y += -cellSize
+                        self.cell = self.getCell()
         if direction == 'right':
-            self.x += cellSize
-            self.cell = self.getCell()
+            actualCell=self.getCell()
+            for cell in grid_cells:
+                if cell.indx==actualCell:
+                    if not cell.walls['right']:
+                        self.x += cellSize
+                        self.cell = self.getCell()
         if direction == 'down':
-            self.y += cellSize
-            self.cell = self.getCell()
+            actualCell=self.getCell()
+            for cell in grid_cells:
+                if cell.indx==actualCell:
+                    if not cell.walls['bottom']:
+                        self.y += cellSize
+                        self.cell = self.getCell()  
         if direction == 'left':
-            self.x += -cellSize
-            self.cell = self.getCell()
-    
-    
+            actualCell=self.getCell()
+            for cell in grid_cells:
+                if cell.indx==actualCell:
+                    if not cell.walls['left']:
+                        self.x += -cellSize
+                        self.cell = self.getCell()
+
+    def moveRandom(self):
+        x=random.randint(0,3)
+        if x==0:
+            self.move('top',grid_cells)
+        if x==1:
+            self.move('right',grid_cells)
+        if x==2:
+            self.move('down',grid_cells)
+        if x==3:
+            self.move('left',grid_cells)
+
 
 
 #Generate a grid of cells
-mazeModel=[9,10,10,12,9,12,9,10,10,4,9,14,9,12,9,12,9,12,9,12,
+mazeModel=[9,10,10,12,9,12,9,10,10,12,9,14,9,12,9,12,9,12,9,12,
           7,9,10,4,7,5,3,14,9,6,3,10,4,5,7,5,5,5,7,5,
           9,6,11,2,12,5,9,10,2,12,9,10,6,1,12,3,6,5,9,6,
           1,10,8,12,3,4,3,10,12,3,6,11,10,6,3,10,10,6,3,12,
@@ -120,7 +147,7 @@ mazeModel=[9,10,10,12,9,12,9,10,10,4,9,14,9,12,9,12,9,12,9,12,
           9,14,3,12,7,3,12,9,6,5,11,2,12,9,10,12,13,1,12,3,
           5,9,12,5,9,10,6,5,13,5,9,12,3,0,12,1,6,5,3,8,
           5,5,5,5,3,12,9,6,5,5,7,3,12,5,7,3,12,7,9,6,
-          3,6,3,2,10,6,3,10,6,3,12,11,2,2,10,14,3,10,2,14]
+          3,6,3,2,10,6,3,10,6,3,14,11,2,2,10,14,3,10,2,14]
 
 #Fill a list of cell to  create a maze
 x=0
@@ -135,11 +162,8 @@ for i in range(len(mazeModel)):
 
 #Individual
 individuals=[]
-individuals.append(Individual(10,19))
-#Starting position
-for cell in grid_cells:
-        if cell.indx == 390:
-            actualCell=cell
+#individuals.append(Individual(10,19))
+individuals.append(Individual(9,13))
 
 #Init pygame
 pygame.init()
@@ -158,42 +182,24 @@ while True:
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_UP:
                 for individual in individuals:
-                    if not actualCell.walls['top']:
-                        individual.update('top')
-                        newCellNumber=individual.getCell()
-                        for cell in grid_cells:
-                            if cell.indx == newCellNumber:
-                                actualCell = cell
+                    individual.move('top',grid_cells)
             if event.key == pygame.K_RIGHT:
-                for individual in individuals:
-                    if not actualCell.walls['right']:
-                        individual.update('right')
-                        newCellNumber=individual.getCell()
-                        for cell in grid_cells:
-                            if cell.indx == newCellNumber:
-                                actualCell = cell
+               for individual in individuals:
+                    individual.move('right',grid_cells)
             if event.key == pygame.K_DOWN:
                 for individual in individuals:
-                    if not actualCell.walls['bottom']:
-                        individual.update('down')
-                        newCellNumber=individual.getCell()
-                        for cell in grid_cells:
-                            if cell.indx == newCellNumber:
-                                actualCell = cell
+                    individual.move('down',grid_cells)
             if event.key == pygame.K_LEFT:
                 for individual in individuals:
-                    if not actualCell.walls['left']:
-                        individual.update('left')
-                        newCellNumber=individual.getCell()
-                        for cell in grid_cells:
-                            if cell.indx == newCellNumber:
-                                actualCell = cell
+                    individual.move('left',grid_cells)
     
     for cell in grid_cells:
         cell.drawCells()
 
     for individual in individuals:
+        individual.moveRandom()
         individual.drawIndividual()
+    
 
     pygame.display.update()
-    clock.tick(60)
+    clock.tick(5)

@@ -1,0 +1,31 @@
+/* Backup pour permettre de bouger un individu manuellement dans le labyrinthe (avec collision) à retravailler puisque
+   la fonction update() a été modifiée
+
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_UP:
+                for individual in individuals:
+                    individual.update('top',grid_cells)
+            if event.key == pygame.K_RIGHT:
+                for individual in individuals:
+                    if not actualCell.walls['right']:
+                        individual.update('right',)
+                        newCellNumber=individual.getCell()
+                        for cell in grid_cells:
+                            if cell.indx == newCellNumber:
+                                actualCell = cell
+            if event.key == pygame.K_DOWN:
+                for individual in individuals:
+                    if not actualCell.walls['bottom']:
+                        individual.update('down')
+                        newCellNumber=individual.getCell()
+                        for cell in grid_cells:
+                            if cell.indx == newCellNumber:
+                                actualCell = cell
+            if event.key == pygame.K_LEFT:
+                for individual in individuals:
+                    if not actualCell.walls['left']:
+                        individual.update('left')
+                        newCellNumber=individual.getCell()
+                        for cell in grid_cells:
+                            if cell.indx == newCellNumber:
+                                actualCell = cell
