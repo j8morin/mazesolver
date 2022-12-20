@@ -15,6 +15,8 @@ class Cell:
     def __init__(self, x, y, case, indx):
         self.x, self.y = x, y
         self.indx= indx
+        self.start=False
+        self.end=False
         if case == 0:
             self.walls = {'top':False , 'right': False, 'bottom': False, 'left': False}
         elif case == 1:
@@ -66,6 +68,11 @@ class Cell:
             pygame.draw.line(screen, 'black',(x+cellSize, y+cellSize), (x, y+cellSize),3)
         if self.walls['left']:
             pygame.draw.line(screen, 'black',(x,y+cellSize), (x, y),3)
+        #Change the color of the start and the end
+        if self.start:
+            pygame.draw.rect(screen,'red',(x,y,cellSize,cellSize),0,0)
+        if self.end:
+            pygame.draw.rect(screen,'red',(x,y,cellSize,cellSize),0,0)
 
 #Individual class
 class Individual:
@@ -154,7 +161,12 @@ x=0
 y=0
 grid_cells=[]
 for i in range(len(mazeModel)):
-    grid_cells.append(Cell(x, y, mazeModel[i], i))
+    c=Cell(x, y, mazeModel[i], i)
+    if i==9:
+        c.end=True
+    if i==390:
+        c.start=True
+    grid_cells.append(c)
     x+=1
     if x==20:
         x=0
@@ -202,4 +214,4 @@ while True:
     
 
     pygame.display.update()
-    clock.tick(5)
+    clock.tick(60)
