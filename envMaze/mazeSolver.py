@@ -1,17 +1,19 @@
 #import
 import pygame #pygame==2.4.3.dev8 version because of pyton 3.44
 from sys import exit
+from res import *
 
 #mazeSolver display 
-displayWidth=610
-displayHeight=610
+displayWidth=600
+displayHeight=600
 mazeDimension=20   #Square of mazeDimension*mazeDimension cells
 cellSize = displayWidth//mazeDimension
 
 #Cell class
 class Cell:
-    def __init__(self, x, y, case):
+    def __init__(self, x, y, case, indx):
         self.x, self.y = x, y
+        self.indx= indx
         if case == 0:
             self.walls = {'top':False , 'right': False, 'bottom': False, 'left': False}
         elif case == 1:
@@ -44,21 +46,59 @@ class Cell:
             self.walls = {'top':True , 'right': True, 'bottom': True, 'left': False} 
         else:
             self.walls = {'top':True , 'right': True, 'bottom': True, 'left': True}
-        
-        self.start, self.end = False, False
 
     #Draw cells:
     def drawCells(self):
         x= self.x * cellSize
         y= self.y * cellSize
+        #Draw the case
+        pygame.draw.line(screen, 'grey',(x,y), (x+cellSize, y),1)
+        pygame.draw.line(screen, 'grey',(x+cellSize, y), (x+cellSize, y+cellSize),1)
+        pygame.draw.line(screen, 'grey',(x+cellSize, y+cellSize), (x, y+cellSize),1)
+        pygame.draw.line(screen, 'grey',(x,y+cellSize), (x, y),1)
+        #Draw walls
         if self.walls['top']:
-            pygame.draw.line(screen, 'black',(x,y), (x+cellSize, y),2)
+            pygame.draw.line(screen, 'black',(x,y), (x+cellSize, y),3)
         if self.walls['right']:
-            pygame.draw.line(screen, 'black',(x+cellSize, y), (x+cellSize, y+cellSize),2)
+            pygame.draw.line(screen, 'black',(x+cellSize, y), (x+cellSize, y+cellSize),3)
         if self.walls['bottom']:
-            pygame.draw.line(screen, 'black',(x+cellSize, y+cellSize), (x, y+cellSize),2)
+            pygame.draw.line(screen, 'black',(x+cellSize, y+cellSize), (x, y+cellSize),3)
         if self.walls['left']:
-            pygame.draw.line(screen, 'black',(x,y+cellSize), (x, y),2)
+            pygame.draw.line(screen, 'black',(x,y+cellSize), (x, y),3)
+
+#Individual class
+class Individual:
+    def __init__(self,x,y):
+        self.x = x * cellSize + 15
+        self.y = y * cellSize + 15
+        self.cell= self.getCell()
+    
+    def drawIndividual(self):
+        x, y = self.x, self.y
+        pygame.draw.circle(screen, 'blue', (x,y), 5, width=0)
+
+    def getCell(self):
+        cell_x = (self.x-15) / cellSize
+        cell_y = (self.y-15) / cellSize
+        cell = cell_y*20 + cell_x
+        return cell
+
+    def update(self, direction):
+        if direction == 'top':
+            self.y += -cellSize
+            self.cell = self.getCell()
+        if direction == 'right':
+            self.x += cellSize
+            self.cell = self.getCell()
+        if direction == 'down':
+            self.y += cellSize
+            self.cell = self.getCell()
+        if direction == 'left':
+            self.x += -cellSize
+            self.cell = self.getCell()
+    
+    
+
 
 #Generate a grid of cells
 mazeModel=[9,10,10,12,9,12,9,10,10,4,9,14,9,12,9,12,9,12,9,12,
@@ -82,20 +122,24 @@ mazeModel=[9,10,10,12,9,12,9,10,10,4,9,14,9,12,9,12,9,12,9,12,
           5,5,5,5,3,12,9,6,5,5,7,3,12,5,7,3,12,7,9,6,
           3,6,3,2,10,6,3,10,6,3,12,11,2,2,10,14,3,10,2,14]
 
-""" grid_cells=[]
-for row in range(mazeDimension):
-    for column in range(mazeDimension):
-        grid_cells.append(Cell(row,column,20)) """
-
+#Fill a list of cell to  create a maze
 x=0
 y=0
 grid_cells=[]
-for case in mazeModel:
-    grid_cells.append(Cell(x, y, case))
+for i in range(len(mazeModel)):
+    grid_cells.append(Cell(x, y, mazeModel[i], i))
     x+=1
     if x==20:
         x=0
         y+=1
+
+#Individual
+individuals=[]
+individuals.append(Individual(10,19))
+#Starting position
+for cell in grid_cells:
+        if cell.indx == 390:
+            actualCell=cell
 
 #Init pygame
 pygame.init()
@@ -110,9 +154,46 @@ while True:
         if event.type == pygame.QUIT:
             pygame.quit()
             exit()
+
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_UP:
+                for individual in individuals:
+                    if not actualCell.walls['top']:
+                        individual.update('top')
+                        newCellNumber=individual.getCell()
+                        for cell in grid_cells:
+                            if cell.indx == newCellNumber:
+                                actualCell = cell
+            if event.key == pygame.K_RIGHT:
+                for individual in individuals:
+                    if not actualCell.walls['right']:
+                        individual.update('right')
+                        newCellNumber=individual.getCell()
+                        for cell in grid_cells:
+                            if cell.indx == newCellNumber:
+                                actualCell = cell
+            if event.key == pygame.K_DOWN:
+                for individual in individuals:
+                    if not actualCell.walls['bottom']:
+                        individual.update('down')
+                        newCellNumber=individual.getCell()
+                        for cell in grid_cells:
+                            if cell.indx == newCellNumber:
+                                actualCell = cell
+            if event.key == pygame.K_LEFT:
+                for individual in individuals:
+                    if not actualCell.walls['left']:
+                        individual.update('left')
+                        newCellNumber=individual.getCell()
+                        for cell in grid_cells:
+                            if cell.indx == newCellNumber:
+                                actualCell = cell
     
     for cell in grid_cells:
         cell.drawCells()
+
+    for individual in individuals:
+        individual.drawIndividual()
 
     pygame.display.update()
     clock.tick(60)
