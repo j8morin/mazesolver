@@ -137,29 +137,45 @@ class Individual:
 
 #Slider class
 class Slider:
-    def __init__(self, x, y,lowerValue,upperValue,interval, description='Default:'):
+    def __init__(self, x, y,lowerValue,upperValue, description='Default:'):
         self.x, self.y = x, y
         self.description = description
         self.lowerValue = lowerValue
         self.upperValue = upperValue
-        self.interval = interval
+        self.value = 0
+        self.sliderSize = 250
+        self.sliderX = self.x+10
+        self.sliderY = self.y+20
         #self.sliderCursor = pygame.Rect(self.x+10,self.y+20,10,20)
 
     def drawSlider(self):
         #Text
         description=font.render(self.description,1,(0,0,0))
-        screen.blit(description,(610,50))
+        screen.blit(description,(self.x,self.y))
         #Slider
-        pygame.draw.line(screen,'grey',(610+10,50+30),(610+10+250,50+30),3)
-        pygame.draw.rect(screen,'green',(self.x+10,self.y+20,10,20),0,0)
+        pygame.draw.line(screen,'grey',(self.x+10,self.y+30),(self.x+10+self.sliderSize,self.y+30),3)
+        pygame.draw.rect(screen,'black',(self.sliderX,self.sliderY,10,20),0,0)
+        #Value of the slider
+        value =  font.render(str(self.value),1,(0,0,0))
+        screen.blit(value,(self.x+self.sliderSize/2,self.y+35))
     
     def modifySlider(self):
         mouse_pos= pygame.mouse.get_pos()
-        if self.x-10<=mouse_pos[0]-15<=self.x+10:
-            if self.y+20<=mouse_pos[1]<=self.y+40:
+        #Detect if the mouse is on the slider
+        if self.sliderX-20<=mouse_pos[0]<=self.sliderX+20:
+            if self.sliderY<=mouse_pos[1]<=self.sliderY+20:
                 if pygame.mouse.get_pressed()[0] != 0:
-                    testValue = pygame.mouse.get_pos()[0]
-                    self.x = testValue - 15
+                    self.sliderX = pygame.mouse.get_pos()[0]-5
+                    multiplier = self.upperValue/self.sliderSize
+                    self.value = int((pygame.mouse.get_pos()[0]-620)*multiplier)
+                    #Minimum and Maximum
+                    if self.value < self.lowerValue:
+                        self.value=self.lowerValue
+                        self.sliderX=self.x+10
+                    if self.value > self.upperValue:
+                        self.value=self.upperValue
+                        self.sliderX=self.x+10+self.sliderSize
+                    print(self.value)
 
 #Generate a grid of cells
 mazeModel=[9,10,10,12,9,12,9,10,10,12,9,14,9,12,9,12,9,12,9,12,
@@ -204,7 +220,7 @@ individuals=[]
 individuals.append(Individual(10,19))
 
 #Sliders
-maxMove=Slider(610,50,0,100,10,'Maximum move per individual:')
+maxMove=Slider(610,50,0,1000,'Maximum move per individual:')
 
 #Init pygame
 pygame.init()
