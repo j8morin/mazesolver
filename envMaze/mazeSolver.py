@@ -5,10 +5,14 @@ from res import *
 import random
 
 #mazeSolver display 
-displayWidth=600
+pygame.font.init()
+font=pygame.font.Font('envMaze/res/Sunflower.otf',15)
+
+displayWidth=900
 displayHeight=600
-mazeDimension=20   #Square of mazeDimension*mazeDimension cells
-cellSize = displayWidth//mazeDimension
+mazeDimension=20
+cellSize = 600//mazeDimension
+
 
 #Cell class
 class Cell:
@@ -50,11 +54,10 @@ class Cell:
         else:
             self.walls = {'top':True , 'right': True, 'bottom': True, 'left': True}
 
-    #Draw cells:
     def drawCells(self):
         x= self.x * cellSize
         y= self.y * cellSize
-        #Draw the case
+        #Draw the box
         pygame.draw.line(screen, 'grey',(x,y), (x+cellSize, y),1)
         pygame.draw.line(screen, 'grey',(x+cellSize, y), (x+cellSize, y+cellSize),1)
         pygame.draw.line(screen, 'grey',(x+cellSize, y+cellSize), (x, y+cellSize),1)
@@ -132,7 +135,31 @@ class Individual:
         if x==3:
             self.move('left',grid_cells)
 
+#Slider class
+class Slider:
+    def __init__(self, x, y,lowerValue,upperValue,interval, description='Default:'):
+        self.x, self.y = x, y
+        self.description = description
+        self.lowerValue = lowerValue
+        self.upperValue = upperValue
+        self.interval = interval
+        #self.sliderCursor = pygame.Rect(self.x+10,self.y+20,10,20)
 
+    def drawSlider(self):
+        #Text
+        description=font.render(self.description,1,(0,0,0))
+        screen.blit(description,(610,50))
+        #Slider
+        pygame.draw.line(screen,'grey',(610+10,50+30),(610+10+250,50+30),3)
+        pygame.draw.rect(screen,'green',(self.x+10,self.y+20,10,20),0,0)
+    
+    def modifySlider(self):
+        mouse_pos= pygame.mouse.get_pos()
+        if self.x-10<=mouse_pos[0]-15<=self.x+10:
+            if self.y+20<=mouse_pos[1]<=self.y+40:
+                if pygame.mouse.get_pressed()[0] != 0:
+                    testValue = pygame.mouse.get_pos()[0]
+                    self.x = testValue - 15
 
 #Generate a grid of cells
 mazeModel=[9,10,10,12,9,12,9,10,10,12,9,14,9,12,9,12,9,12,9,12,
@@ -151,8 +178,8 @@ mazeModel=[9,10,10,12,9,12,9,10,10,12,9,14,9,12,9,12,9,12,9,12,
           3,6,9,10,2,8,12,9,6,5,3,12,9,14,9,10,12,3,6,5,
           13,9,6,9,10,6,3,6,13,5,9,6,5,9,6,9,6,9,12,5,
           3,6,9,6,9,8,10,10,4,5,6,12,3,2,14,3,10,4,3,4,
-          9,14,3,12,7,3,12,9,6,5,11,2,12,9,10,12,13,1,12,3,
-          5,9,12,5,9,10,6,5,13,5,9,12,3,0,12,1,6,5,3,8,
+          9,14,3,12,7,3,12,9,6,5,11,2,12,9,10,12,13,1,12,7,
+          5,9,12,5,9,10,6,5,13,5,9,12,3,0,12,1,6,5,3,12,
           5,5,5,5,3,12,9,6,5,5,7,3,12,5,7,3,12,7,9,6,
           3,6,3,2,10,6,3,10,6,3,14,11,2,2,10,14,3,10,2,14]
 
@@ -174,8 +201,10 @@ for i in range(len(mazeModel)):
 
 #Individual
 individuals=[]
-#individuals.append(Individual(10,19))
-individuals.append(Individual(9,13))
+individuals.append(Individual(10,19))
+
+#Sliders
+maxMove=Slider(610,50,0,100,10,'Maximum move per individual:')
 
 #Init pygame
 pygame.init()
@@ -183,7 +212,11 @@ clock = pygame.time.Clock()
 screen=pygame.display.set_mode((displayWidth,displayHeight))
 pygame.display.set_caption('MazeSolver')
 
+nbMoveMax=1
+nbMove=0
+
 while True:
+    clock.tick(60)
     screen.fill('white')
 
     for event in pygame.event.get():
@@ -209,9 +242,22 @@ while True:
         cell.drawCells()
 
     for individual in individuals:
-        individual.moveRandom()
-        individual.drawIndividual()
-    
+        if nbMove==0:
+            print('start')
+            individual.drawIndividual()
+        elif nbMove<=nbMoveMax:
+            individual.moveRandom()
+        else:
+            individual.drawIndividual()
 
+    maxMove.drawSlider()
+    maxMove.modifySlider()
+
+    pygame.display.flip()    
     pygame.display.update()
-    clock.tick(60)
+
+    #Freeze display to see the begining
+    if nbMove==0:
+        pygame.time.wait(2000)
+    
+    nbMove+=1
