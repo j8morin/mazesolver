@@ -79,6 +79,7 @@ class Cell:
 
 #Individual class
 class Individual:
+    #x , y = column and row of the maze.
     def __init__(self,x,y):
         self.x = x * cellSize + 15
         self.y = y * cellSize + 15
@@ -175,8 +176,36 @@ class Slider:
                     if self.value > self.upperValue:
                         self.value=self.upperValue
                         self.sliderX=self.x+10+self.sliderSize
-                    print(self.value)
+        return self.value
 
+#Button class
+class Button:
+    def __init__(self,x,y,image,scale):
+        width = image.get_width()
+        height = image.get_height()
+        self.image = pygame.transform.scale(image,(int(width*scale), int(height*scale)))
+        self.rect = self.image.get_rect()
+        self.rect.topleft = (x,y)
+        self.clicked = False
+
+    def drawButton(self):
+        launchFunction = False
+        mouse_pos = pygame.mouse.get_pos()
+        if self.rect.collidepoint(mouse_pos):
+            #On click
+            if pygame.mouse.get_pressed()[0] == 1 and self.clicked == False:
+                self.clicked=True
+                launchFunction=True
+                print('START')
+            #On release to make the button clickable again
+            if pygame.mouse.get_pressed()[0] == 0:
+                self.clicked=False
+        #display the button
+        screen.blit(self.image, (self.rect.x,self.rect.y))
+        return launchFunction
+
+
+#---------------------------------------------------------------------------------------------------------------------------
 #Generate a grid of cells
 mazeModel=[9,10,10,12,9,12,9,10,10,12,9,14,9,12,9,12,9,12,9,12,
           7,9,10,4,7,5,3,14,9,6,3,10,4,5,7,5,5,5,7,5,
@@ -217,63 +246,78 @@ for i in range(len(mazeModel)):
 
 #Individual
 individuals=[]
-individuals.append(Individual(10,19))
+#individuals.append(Individual(10,19))
+#individuals.append(Individual(10,19))
+#individuals.append(Individual(10,19))
 
 #Sliders
+sliders=[]
 maxMove=Slider(610,50,0,1000,'Maximum move per individual:')
+sliders.append(maxMove)
+population=Slider(610,100,0,50,'Population:')
+sliders.append(population)
 
+#Buttons
+start_img=pygame.image.load('envMaze/res/start.png')
+start_bt = Button(700,400,start_img,0.2)
+
+#--------------------------------------------------------------------------------------------------------------
 #Init pygame
 pygame.init()
 clock = pygame.time.Clock()
 screen=pygame.display.set_mode((displayWidth,displayHeight))
 pygame.display.set_caption('MazeSolver')
 
-nbMoveMax=1
 nbMove=0
-
+started=False
+#Main Loop
 while True:
     clock.tick(60)
     screen.fill('white')
+
+    #Parameters can only be changed when it's not simulating
+    if not started:
+        nbMoveMax=sliders[0].value
+        nbPopulation=sliders[1].value
+
+        if len(individuals)!=nbPopulation:
+            for i in range(nbPopulation):
+                individuals.append(Individual(10,19))
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
             exit()
 
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_UP:
-                for individual in individuals:
-                    individual.move('top',grid_cells)
-            if event.key == pygame.K_RIGHT:
-               for individual in individuals:
-                    individual.move('right',grid_cells)
-            if event.key == pygame.K_DOWN:
-                for individual in individuals:
-                    individual.move('down',grid_cells)
-            if event.key == pygame.K_LEFT:
-                for individual in individuals:
-                    individual.move('left',grid_cells)
     
     for cell in grid_cells:
         cell.drawCells()
 
-    for individual in individuals:
-        if nbMove==0:
-            print('start')
-            individual.drawIndividual()
-        elif nbMove<=nbMoveMax:
-            individual.moveRandom()
-        else:
-            individual.drawIndividual()
+    if started:
+        for individual in individuals:
+            if nbMove==0:
+                #Put all the individuals at the start of the Maze
+                
+                #individual.x=10*cellSize+15
+                #individual.y=19*cellSize+15
+                individual.cell = individual.getCell()
+            elif nbMove<=nbMoveMax:
+                individual.moveRandom()
+                individual.drawIndividual()
+            else:
+                individual.drawIndividual()
+                nbMove=0
+                individuals.clear()
+                started=False
 
-    maxMove.drawSlider()
-    maxMove.modifySlider()
+    for slider in sliders:
+        slider.drawSlider()
+        slider.value=slider.modifySlider()
+
+    if start_bt.drawButton():
+        started=True
 
     pygame.display.flip()    
     pygame.display.update()
-
-    #Freeze display to see the begining
-    if nbMove==0:
-        pygame.time.wait(2000)
     
     nbMove+=1
