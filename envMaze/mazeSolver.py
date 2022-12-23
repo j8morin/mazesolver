@@ -275,41 +275,38 @@ while True:
     clock.tick(60)
     screen.fill('white')
 
-    #Parameters can only be changed when it's not simulating
-    if not started:
-        nbMoveMax=sliders[0].value
-        nbPopulation=sliders[1].value
-
-        
-        for i in range(nbPopulation):
-            if len(individuals)!=nbPopulation:
-                individuals.append(Individual(10,19))
-
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
             exit()
+
+    #Parameters can only be changed when it's not simulating
+    if not started:
+        nbMoveMax=sliders[0].value
+        nbPopulation=sliders[1].value
+        for i in range(nbPopulation):
+            if len(individuals)!=nbPopulation:
+                individuals.append(Individual(10,19))
+
+    
 
     
     for cell in grid_cells:
         cell.drawCells()
 
     if started:
-        for individual in individuals:
-            if nbMove==0:
-                #Put all the individuals at the start of the Maze
-                
-                #individual.x=10*cellSize+15
-                #individual.y=19*cellSize+15
-                individual.cell = individual.getCell()
-            elif nbMove<=nbMoveMax:
+        if nbMove==0:
+            nbMove+=1
+        elif nbMove<=nbMoveMax:
+            for individual in individuals:
                 individual.moveRandom()
                 individual.drawIndividual()
-            else:
-                individual.drawIndividual()
-                nbMove=0
-                individuals.clear()
-                started=False
+            nbMove+=1
+        else:
+            individual.drawIndividual()
+            individuals.clear()
+            started=False  
+            nbMove=0 
 
     for slider in sliders:
         slider.drawSlider()
@@ -320,5 +317,3 @@ while True:
 
     pygame.display.flip()    
     pygame.display.update()
-    
-    nbMove+=1
