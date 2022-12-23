@@ -243,12 +243,12 @@ for i in range(len(mazeModel)):
     if x==20:
         x=0
         y+=1
+#---------------------------------------------------------------------------------------------------------------------------
 
 #Individual
 individuals=[]
-#individuals.append(Individual(10,19))
-#individuals.append(Individual(10,19))
-#individuals.append(Individual(10,19))
+
+#---------------------------------------------------------------------------------------------------------------------------
 
 #Sliders
 sliders=[]
@@ -257,11 +257,13 @@ sliders.append(maxMove)
 population=Slider(610,100,0,50,'Population:')
 sliders.append(population)
 
+#---------------------------------------------------------------------------------------------------------------------------
+
 #Buttons
 start_img=pygame.image.load('envMaze/res/start.png')
 start_bt = Button(700,400,start_img,0.2)
 
-#--------------------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------------------------------
 #Init pygame
 pygame.init()
 clock = pygame.time.Clock()
@@ -280,6 +282,9 @@ while True:
             pygame.quit()
             exit()
 
+    for cell in grid_cells:
+        cell.drawCells()
+    
     #Parameters can only be changed when it's not simulating
     if not started:
         nbMoveMax=sliders[0].value
@@ -288,20 +293,18 @@ while True:
             if len(individuals)!=nbPopulation:
                 individuals.append(Individual(10,19))
 
-    
-
-    
-    for cell in grid_cells:
-        cell.drawCells()
-
+    #WHat happen when you press start button
     if started:
+        #Useless but in case of (init)
         if nbMove==0:
             nbMove+=1
+        #Process the simulation
         elif nbMove<=nbMoveMax:
             for individual in individuals:
                 individual.moveRandom()
                 individual.drawIndividual()
             nbMove+=1
+        #End of the simulation / reset
         else:
             individual.drawIndividual()
             individuals.clear()
