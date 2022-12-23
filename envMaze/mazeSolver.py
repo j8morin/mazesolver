@@ -280,8 +280,9 @@ while True:
         nbMoveMax=sliders[0].value
         nbPopulation=sliders[1].value
 
-        if len(individuals)!=nbPopulation:
-            for i in range(nbPopulation):
+        
+        for i in range(nbPopulation):
+            if len(individuals)!=nbPopulation:
                 individuals.append(Individual(10,19))
 
     for event in pygame.event.get():
