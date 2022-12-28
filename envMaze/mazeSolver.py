@@ -83,7 +83,9 @@ class Individual:
     def __init__(self,x,y):
         self.x = x * cellSize + 15
         self.y = y * cellSize + 15
-        self.cell= self.getCell()
+        self.cell=self.getCell()
+        self.history=[]
+        self.fitness=0
     
     def drawIndividual(self):
         x, y = self.x, self.y
@@ -96,28 +98,32 @@ class Individual:
         return cell
 
     def move(self, direction, grid_cells):
-        if direction == 'top':
+        if direction == 0:
+            self.history.append(0)
             actualCell=self.getCell()
             for cell in grid_cells:
                 if cell.indx==actualCell:
                     if not cell.walls['top']:
                         self.y += -cellSize
                         self.cell = self.getCell()
-        if direction == 'right':
+        if direction == 1:
+            self.history.append(1)
             actualCell=self.getCell()
             for cell in grid_cells:
                 if cell.indx==actualCell:
                     if not cell.walls['right']:
                         self.x += cellSize
                         self.cell = self.getCell()
-        if direction == 'down':
+        if direction == 2:
+            self.history.append(2)
             actualCell=self.getCell()
             for cell in grid_cells:
                 if cell.indx==actualCell:
                     if not cell.walls['bottom']:
                         self.y += cellSize
                         self.cell = self.getCell()  
-        if direction == 'left':
+        if direction == 3:
+            self.history.append(3)
             actualCell=self.getCell()
             for cell in grid_cells:
                 if cell.indx==actualCell:
@@ -127,14 +133,25 @@ class Individual:
 
     def moveRandom(self):
         x=random.randint(0,3)
-        if x==0:
-            self.move('top',grid_cells)
-        if x==1:
-            self.move('right',grid_cells)
-        if x==2:
-            self.move('down',grid_cells)
-        if x==3:
-            self.move('left',grid_cells)
+        self.move(x,grid_cells)
+        # if x==0:
+        #     self.move('top',grid_cells)
+        # if x==1:
+        #     self.move('right',grid_cells)
+        # if x==2:
+        #     self.move('down',grid_cells)
+        # if x==3:
+        #     self.move('left',grid_cells)
+
+    def setFitness(self):
+        #FV=(CC-SC)/(FC-CC) * 100 with SC=390 and FC=9
+        SC=390
+        FC=9
+        CC=self.getCell()
+        if (FC-CC==0):    #avoid division by zero
+            self.fitness = 50000.0
+        else:
+            self.fitness = abs(((CC-SC)/(FC-CC))*100)
 
 #Slider class
 class Slider:
@@ -244,12 +261,59 @@ for i in range(len(mazeModel)):
         x=0
         y+=1
 #---------------------------------------------------------------------------------------------------------------------------
+def fitnessOperation(individuals):
+    for individual in individuals:
+        individual.setFitness()
+    return individuals
 
+def crossOverOperation(individuals):
+    #Delete the half of the individuals with the lowest fitness
+    individuals.sort(key=lambda individual: individual.fitness, reverse= True)
+    nbDelete=int(len(individuals)/2)
+    for i in range(nbDelete):
+        individuals.pop()
+    #Create "couple" of parent
+    individualCouples=[]
+    for i in range(0,len(individuals),2):
+        if i+1 != len(individuals):
+            couple=(individuals[i],individuals[i+1])
+            individualCouples.append(couple)
+    #Addition operation for first child
+    firstChild=Individual(10,19)
+    history=[]
+    for couple in individualCouples:
+        for i in range(len(couple[0].history)):
+            #print(couple[0].history[i],couple[1].history[i])
+            history.append((couple[0].history[i]+couple[1].history[i])%4)
+        firstChild.history=history
+        individuals.append(firstChild)
+    #Subtraction operation for the second child
+    secondChild=Individual(10,19)
+    history=[]
+    for couple in individualCouples:
+        for i in range(len(couple[0].history)):
+            #print(couple[0].history[i],couple[1].history[i])
+            if couple[0].history[i]>=couple[1].history[i]:
+                history.append((couple[0].history[i]-couple[1].history[i])%4)
+            else:
+                history.append((couple[1].history[i]-couple[0].history[i])%4)
+        secondChild.history=history
+        individuals.append(secondChild)
+    
+    print (len(individuals))
+    return individuals
+
+def mutationOperation(individuals):
+    for individual in individuals:
+        n=random.randint(0,len(individuals)-1)
+        x=random.randint(0,3)
+        individual.history[n]=x
+    return individuals
+#---------------------------------------------------------------------------------------------------------------------------
 #Individual
 individuals=[]
 
 #---------------------------------------------------------------------------------------------------------------------------
-
 #Sliders
 sliders=[]
 maxMove=Slider(610,50,0,1000,'Maximum move per individual:')
@@ -258,7 +322,6 @@ population=Slider(610,100,0,50,'Population:')
 sliders.append(population)
 
 #---------------------------------------------------------------------------------------------------------------------------
-
 #Buttons
 start_img=pygame.image.load('envMaze/res/start.png')
 start_bt = Button(700,400,start_img,0.2)
@@ -272,6 +335,7 @@ pygame.display.set_caption('MazeSolver')
 
 nbMove=0
 started=False
+nbGeneration=0
 #Main Loop
 while True:
     clock.tick(60)
@@ -284,39 +348,74 @@ while True:
 
     for cell in grid_cells:
         cell.drawCells()
+
+    for slider in sliders:
+        slider.drawSlider()
+        #For the momment sliders can only be modified to init the first generation.
+        if nbGeneration==0:
+            slider.value=slider.modifySlider()
+
+    if start_bt.drawButton():
+        started=True
     
     #Parameters can only be changed when it's not simulating
-    if not started:
+    if not started and nbGeneration==0:
         nbMoveMax=sliders[0].value
-        nbPopulation=sliders[1].value
-        for i in range(nbPopulation):
-            if len(individuals)!=nbPopulation:
-                individuals.append(Individual(10,19))
+        nbPopulation=sliders[1].value  
 
-    #WHat happen when you press start button
+    #Text
+    generationTxt=font.render("Generation:"+str(nbGeneration),1,(0,0,0))
+    screen.blit(generationTxt,(610,580))
+
+    nbMoveTxt=font.render("nbMoveMax:"+str(nbMoveMax),1,(0,0,0))
+    screen.blit(nbMoveTxt,(750,580))
+
+    #Start simulation with start button!
     if started:
         #Useless but in case of (init)
         if nbMove==0:
+            #Generate first population
+            for i in range(nbPopulation):
+                if len(individuals)!=nbPopulation:
+                    individuals.append(Individual(10,19)) 
             nbMove+=1
         #Process the simulation
         elif nbMove<=nbMoveMax:
             for individual in individuals:
-                individual.moveRandom()
+                if nbGeneration==0:
+                    individual.moveRandom()
+                else:
+                    individual.move(individual.history[nbMove],grid_cells)
                 individual.drawIndividual()
             nbMove+=1
         #End of the simulation / reset
         else:
-            individual.drawIndividual()
-            individuals.clear()
+            #Calculate Fitness of every individual
+            fitnessOperation(individuals)
+            crossOverOperation(individuals)
+            mutationOperation(individuals)
+            #put every indivual at the start (10,19)
+            for individual in individuals:
+                individual.x = 10 * cellSize + 15
+                individual.y = 19 * cellSize + 15
+                individual.cell = individual.getCell()
+                individual.drawIndividual()
+
+            nbGeneration+=1
             started=False  
-            nbMove=0 
+            nbMove=0
+            nbMoveMax+=20
+        #     #Banc de test
+        #     # print(individuals[0].history,len(individuals[0].history))
 
-    for slider in sliders:
-        slider.drawSlider()
-        slider.value=slider.modifySlider()
+        #     # individuals.append(Individual(9,1))
+        #     # individuals[0].fitness=individuals[0].getFitness()
+        #     # print(individuals[0].fitness)
 
-    if start_bt.drawButton():
-        started=True
+        #     # individuals.append(Individual(9,19))
+        #     # individuals[1].fitness=individuals[1].getFitness()
+        #     # print(individuals[1].fitness)
+            
 
     pygame.display.flip()    
     pygame.display.update()
