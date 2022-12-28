@@ -193,6 +193,9 @@ class Slider:
                     if self.value > self.upperValue:
                         self.value=self.upperValue
                         self.sliderX=self.x+10+self.sliderSize
+                    #Only even number
+                    if self.value%2!=0:
+                        self.value+=1
         return self.value
 
 #Button class
@@ -261,17 +264,22 @@ for i in range(len(mazeModel)):
         x=0
         y+=1
 #---------------------------------------------------------------------------------------------------------------------------
+#Genetic algorithm functions
+
 def fitnessOperation(individuals):
     for individual in individuals:
         individual.setFitness()
     return individuals
 
 def crossOverOperation(individuals):
+    print("---------------------- Crossover ---------------------")
     #Delete the half of the individuals with the lowest fitness
     individuals.sort(key=lambda individual: individual.fitness, reverse= True)
     nbDelete=int(len(individuals)/2)
+    print("initial len",len(individuals))
     for i in range(nbDelete):
         individuals.pop()
+    print("delete half",len(individuals))
     #Create "couple" of parent
     individualCouples=[]
     for i in range(0,len(individuals),2):
@@ -300,9 +308,10 @@ def crossOverOperation(individuals):
         secondChild.history=history
         individuals.append(secondChild)
     
-    print (len(individuals))
+    print ("Final len" ,len(individuals))
     return individuals
 
+#A corriger!
 def mutationOperation(individuals):
     for individual in individuals:
         n=random.randint(0,len(individuals)-1)
@@ -336,6 +345,9 @@ pygame.display.set_caption('MazeSolver')
 nbMove=0
 started=False
 nbGeneration=0
+
+movePerGeneration=20
+
 #Main Loop
 while True:
     clock.tick(60)
@@ -367,44 +379,100 @@ while True:
     generationTxt=font.render("Generation:"+str(nbGeneration),1,(0,0,0))
     screen.blit(generationTxt,(610,580))
 
-    nbMoveTxt=font.render("nbMoveMax:"+str(nbMoveMax),1,(0,0,0))
+    nbMoveTxt=font.render("nbMoveMax:"+str(movePerGeneration),1,(0,0,0))
     screen.blit(nbMoveTxt,(750,580))
 
     #Start simulation with start button!
+    #Revoir cette partie pour:
+    # Mouvements aléatoires*20 si generation0
+    # Mouvements du genome + 20 mouvements aléatoire si generation N!=0
+#Pourquoi pas if nbMove<nbMoveMax
+                #if nbMove<movePerGeneration
+                # du coup ca me fait 20 random move au premier et on el apsse à 40 avec un variable previousMove
+                # pour le coup d'apres faire previousMove meme mouvement+ movePerGeneration radom
+
     if started:
-        #Useless but in case of (init)
-        if nbMove==0:
-            #Generate first population
-            for i in range(nbPopulation):
+        if nbGeneration==0:
+            #Generate first generation
+            for i in range (nbPopulation):
                 if len(individuals)!=nbPopulation:
-                    individuals.append(Individual(10,19)) 
-            nbMove+=1
-        #Process the simulation
-        elif nbMove<=nbMoveMax:
+                 individuals.append(Individual(10,19))
+        #Process pour gen0
+        if nbGeneration==0 and nbMove<movePerGeneration:
             for individual in individuals:
-                if nbGeneration==0:
-                    individual.moveRandom()
-                else:
-                    individual.move(individual.history[nbMove],grid_cells)
+                individual.moveRandom()
                 individual.drawIndividual()
             nbMove+=1
-        #End of the simulation / reset
-        else:
-            #Calculate Fitness of every individual
+        #Process
+        if nbGeneration>0 and nbMove<movePerGeneration:
+            for individual in individuals:
+                #Premier move issu du genome
+                if nbMove < movePerGeneration-20:
+                    individual.move(individual.history[nbMove],grid_cells)
+                    individual.drawIndividual()
+                #20 mouve aléatoires
+                else:
+                    individual.moveRandom()
+                    individual.drawIndividual()
+            nbMove+=1
+        #Fin de génération
+        if nbMove==movePerGeneration:
             fitnessOperation(individuals)
             crossOverOperation(individuals)
-            mutationOperation(individuals)
+            #mutationOperation(individuals)
             #put every indivual at the start (10,19)
             for individual in individuals:
                 individual.x = 10 * cellSize + 15
                 individual.y = 19 * cellSize + 15
                 individual.cell = individual.getCell()
                 individual.drawIndividual()
+                #print(individual.history)
 
             nbGeneration+=1
             started=False  
             nbMove=0
-            nbMoveMax+=20
+            movePerGeneration+=20
+            #print(individuals[0].fitness)
+
+
+
+
+    
+    
+    # if started:
+    #     #Useless but in case of (init)
+    #     if nbMove==0:
+    #         #Generate first population
+    #         for i in range(nbPopulation):
+    #             if len(individuals)!=nbPopulation:
+    #                 individuals.append(Individual(10,19)) 
+    #         nbMove+=1
+    #     #Process the simulation
+    #     elif nbMove<=nbMoveMax:
+    #         for individual in individuals:
+    #             if nbGeneration==0:
+    #                 individual.moveRandom()
+    #             else:
+    #                 individual.move(individual.history[nbMove],grid_cells)
+    #             individual.drawIndividual()
+    #         nbMove+=1
+    #     #End of the simulation / reset
+    #     else:
+    #         #Calculate Fitness of every individual
+    #         fitnessOperation(individuals)
+    #         crossOverOperation(individuals)
+    #         mutationOperation(individuals)
+    #         #put every indivual at the start (10,19)
+    #         for individual in individuals:
+    #             individual.x = 10 * cellSize + 15
+    #             individual.y = 19 * cellSize + 15
+    #             individual.cell = individual.getCell()
+    #             individual.drawIndividual()
+
+    #         nbGeneration+=1
+    #         started=False  
+    #         nbMove=0
+    #         nbMoveMax+=20
         #     #Banc de test
         #     # print(individuals[0].history,len(individuals[0].history))
 
