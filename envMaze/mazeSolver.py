@@ -99,7 +99,6 @@ class Individual:
 
     def move(self, direction, grid_cells):
         if direction == 0:
-            self.history.append(0)
             actualCell=self.getCell()
             for cell in grid_cells:
                 if cell.indx==actualCell:
@@ -107,7 +106,6 @@ class Individual:
                         self.y += -cellSize
                         self.cell = self.getCell()
         if direction == 1:
-            self.history.append(1)
             actualCell=self.getCell()
             for cell in grid_cells:
                 if cell.indx==actualCell:
@@ -115,7 +113,6 @@ class Individual:
                         self.x += cellSize
                         self.cell = self.getCell()
         if direction == 2:
-            self.history.append(2)
             actualCell=self.getCell()
             for cell in grid_cells:
                 if cell.indx==actualCell:
@@ -123,7 +120,6 @@ class Individual:
                         self.y += cellSize
                         self.cell = self.getCell()  
         if direction == 3:
-            self.history.append(3)
             actualCell=self.getCell()
             for cell in grid_cells:
                 if cell.indx==actualCell:
@@ -133,20 +129,14 @@ class Individual:
 
     def moveRandom(self):
         x=random.randint(0,3)
+        self.history.append(x)
         self.move(x,grid_cells)
-        # if x==0:
-        #     self.move('top',grid_cells)
-        # if x==1:
-        #     self.move('right',grid_cells)
-        # if x==2:
-        #     self.move('down',grid_cells)
-        # if x==3:
-        #     self.move('left',grid_cells)
+        
 
     def setFitness(self):
         #FV=(CC-SC)/(FC-CC) * 100 with SC=390 and FC=9
-        SC=390
-        FC=9
+        SC=0 #390
+        FC=399    #9
         CC=self.getCell()
         if (FC-CC==0):    #avoid division by zero
             self.fitness = 50000.0
@@ -248,15 +238,37 @@ mazeModel=[9,10,10,12,9,12,9,10,10,12,9,14,9,12,9,12,9,12,9,12,
           5,5,5,5,3,12,9,6,5,5,7,3,12,5,7,3,12,7,9,6,
           3,6,3,2,10,6,3,10,6,3,14,11,2,2,10,14,3,10,2,14]
 
+mazeModelTest=[11,12,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,
+               15,3,12,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,
+               15,15,3,12,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,
+               15,15,15,3,12,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,
+               15,15,15,15,3,12,15,15,15,15,15,15,15,15,15,15,15,15,15,15,
+               15,15,15,15,15,3,12,15,15,15,15,15,15,15,15,15,15,15,15,15,
+               15,15,15,15,15,15,3,12,15,15,15,15,15,15,15,15,15,15,15,15, 
+               15,15,15,15,15,15,15,3,12,15,15,15,15,15,15,15,15,15,15,15,
+               15,15,15,15,15,15,15,15,3,12,15,15,15,15,15,15,15,15,15,15,
+               15,15,15,15,15,15,15,15,15,3,12,15,15,15,15,15,15,15,15,15,
+               15,15,15,15,15,15,15,15,15,15,3,12,15,15,15,15,15,15,15,15,
+               15,15,15,15,15,15,15,15,15,15,15,3,12,15,15,15,15,15,15,15,
+               15,15,15,15,15,15,15,15,15,15,15,15,3,12,15,15,15,15,15,15,
+               15,15,15,15,15,15,15,15,15,15,15,15,15,3,12,15,15,15,15,15,
+               15,15,15,15,15,15,15,15,15,15,15,15,15,15,3,12,15,15,15,15,
+               15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,3,12,15,15,15,
+               15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,3,12,15,15,
+               15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,3,12,15,
+               15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,3,12,
+               15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,7]
+
+
 #Fill a list of cell to  create a maze
 x=0
 y=0
 grid_cells=[]
-for i in range(len(mazeModel)):
-    c=Cell(x, y, mazeModel[i], i)
-    if i==9:
+for i in range(len(mazeModelTest)):
+    c=Cell(x, y, mazeModelTest[i], i)
+    if i==0:  #9
         c.end=True
-    if i==390:
+    if i==399: #390
         c.start=True
     grid_cells.append(c)
     x+=1
@@ -277,39 +289,42 @@ def crossOverOperation(individuals):
     individuals.sort(key=lambda individual: individual.fitness, reverse= True)
     nbDelete=int(len(individuals)/2)
     print("initial len",len(individuals))
+    
     for i in range(nbDelete):
         individuals.pop()
     print("delete half",len(individuals))
-    #Create "couple" of parent
-    individualCouples=[]
-    for i in range(0,len(individuals),2):
-        if i+1 != len(individuals):
-            couple=(individuals[i],individuals[i+1])
-            individualCouples.append(couple)
-    #Addition operation for first child
-    firstChild=Individual(10,19)
-    history=[]
-    for couple in individualCouples:
-        for i in range(len(couple[0].history)):
-            #print(couple[0].history[i],couple[1].history[i])
-            history.append((couple[0].history[i]+couple[1].history[i])%4)
-        firstChild.history=history
-        individuals.append(firstChild)
-    #Subtraction operation for the second child
-    secondChild=Individual(10,19)
-    history=[]
-    for couple in individualCouples:
-        for i in range(len(couple[0].history)):
-            #print(couple[0].history[i],couple[1].history[i])
-            if couple[0].history[i]>=couple[1].history[i]:
-                history.append((couple[0].history[i]-couple[1].history[i])%4)
-            else:
-                history.append((couple[1].history[i]-couple[0].history[i])%4)
-        secondChild.history=history
-        individuals.append(secondChild)
+
+    for i in individuals:
+        print(i.fitness)
     
-    print ("Final len" ,len(individuals))
-    return individuals
+    # Create "couple" of parent
+    listCouples=[]
+    for i in range(0,len(individuals)-1,2):
+        couple=(individuals[i],individuals[i+1])
+        print (couple[0].fitness,couple[1].fitness)
+        listCouples.append(couple)
+    
+    # Create children
+    print(individuals[0].history)
+    print("Nombre de couples:",len(listCouples))
+    for couple in listCouples:
+        historyFirst=[]
+        historySecond=[]
+        firstChild=Individual(10,19)
+        secondChild=Individual(10,19)
+        for i in range (len(couple[0].history)):
+            #addition
+            historyFirst.append((couple[0].history[i]+couple[1].history[i])%4)
+            #substraction
+            if couple[0].history[i]>=couple[1].history[i]:
+                historySecond.append((couple[0].history[i]-couple[1].history[i])%4)
+            else:
+                historySecond.append((couple[1].history[i]-couple[0].history[i])%4)
+        firstChild.history=historyFirst
+        secondChild.history=historySecond
+        individuals.append(firstChild)
+        individuals.append(secondChild)
+    print ("final len:",len(individuals))
 
 #A corriger!
 def mutationOperation(individuals):
@@ -327,7 +342,7 @@ individuals=[]
 sliders=[]
 maxMove=Slider(610,50,0,1000,'Maximum move per individual:')
 sliders.append(maxMove)
-population=Slider(610,100,0,50,'Population:')
+population=Slider(610,100,0,100,'Population:')
 sliders.append(population)
 
 #---------------------------------------------------------------------------------------------------------------------------
@@ -342,11 +357,12 @@ clock = pygame.time.Clock()
 screen=pygame.display.set_mode((displayWidth,displayHeight))
 pygame.display.set_caption('MazeSolver')
 
-nbMove=0
 started=False
 nbGeneration=0
 
+nbMove=0
 movePerGeneration=20
+previousGenomeMove=0
 
 #Main Loop
 while True:
@@ -379,8 +395,10 @@ while True:
     generationTxt=font.render("Generation:"+str(nbGeneration),1,(0,0,0))
     screen.blit(generationTxt,(610,580))
 
-    nbMoveTxt=font.render("nbMoveMax:"+str(movePerGeneration),1,(0,0,0))
+    nbMoveTxt=font.render("nbMoveMax:"+str(nbMove),1,(0,0,0))
     screen.blit(nbMoveTxt,(750,580))
+
+    
 
     #Start simulation with start button!
     #Revoir cette partie pour:
@@ -392,52 +410,47 @@ while True:
                 # pour le coup d'apres faire previousMove meme mouvement+ movePerGeneration radom
 
     if started:
+        
+        #Generate the individuals for the first generation
         if nbGeneration==0:
-            #Generate first generation
             for i in range (nbPopulation):
                 if len(individuals)!=nbPopulation:
-                 individuals.append(Individual(10,19))
-        #Process pour gen0
-        if nbGeneration==0 and nbMove<movePerGeneration:
-            for individual in individuals:
-                individual.moveRandom()
-                individual.drawIndividual()
-            nbMove+=1
-        #Process
-        if nbGeneration>0 and nbMove<movePerGeneration:
-            for individual in individuals:
-                #Premier move issu du genome
-                if nbMove < movePerGeneration-20:
-                    individual.move(individual.history[nbMove],grid_cells)
-                    individual.drawIndividual()
-                #20 mouve aléatoires
+                    individuals.append(Individual(0,0)) #10,19
+        
+        if nbMove<=nbMoveMax:   #general security to not exceed to max amount of moves
+            if nbMove<movePerGeneration:
+                #-1-Move genome
+                if nbMove<previousGenomeMove:
+                    for individual in individuals:
+                        individual.move(individual.history[nbMove],grid_cells)
+                        individual.drawIndividual()
+                    nbMove+=1
+                #-1-Move random
                 else:
-                    individual.moveRandom()
+                    for individual in individuals:
+                        individual.moveRandom()
+                        individual.drawIndividual()
+                    nbMove+=1
+            
+            #End of a generation
+            if nbMove==movePerGeneration:
+                print('end')
+                #Genetic
+                fitnessOperation(individuals)
+                crossOverOperation(individuals)
+                #put every indivual at the start (10,19)
+                for individual in individuals:
+                    individual.x = 0 * cellSize + 15
+                    individual.y = 0 * cellSize + 15
+                    individual.cell = individual.getCell()
                     individual.drawIndividual()
-            nbMove+=1
-        #Fin de génération
-        if nbMove==movePerGeneration:
-            fitnessOperation(individuals)
-            crossOverOperation(individuals)
-            #mutationOperation(individuals)
-            #put every indivual at the start (10,19)
-            for individual in individuals:
-                individual.x = 10 * cellSize + 15
-                individual.y = 19 * cellSize + 15
-                individual.cell = individual.getCell()
-                individual.drawIndividual()
-                #print(individual.history)
 
-            nbGeneration+=1
-            started=False  
-            nbMove=0
-            movePerGeneration+=20
-            #print(individuals[0].fitness)
-
-
-
-
-    
+                nbGeneration+=1
+                started=False  
+                previousGenomeMove=movePerGeneration
+                movePerGeneration+=20  
+                nbMove=0
+                print("ready for next gen!")
     
     # if started:
     #     #Useless but in case of (init)
@@ -482,8 +495,7 @@ while True:
 
         #     # individuals.append(Individual(9,19))
         #     # individuals[1].fitness=individuals[1].getFitness()
-        #     # print(individuals[1].fitness)
-            
+        #     # print(individuals[1].fitness)    
 
     pygame.display.flip()    
     pygame.display.update()
