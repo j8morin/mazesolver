@@ -77,6 +77,7 @@ class Cell:
         if self.end:
             pygame.draw.rect(screen,'red',(x,y,cellSize,cellSize),0,0)
 
+
 #Individual class
 class Individual:
     #x , y = column and row of the maze.
@@ -139,7 +140,17 @@ class Individual:
         FC=399    #9
         CC=self.getCell()
         if (FC-CC==0):    #avoid division by zero
-            self.fitness = 50000.0
+            self.fitness = 40000.0
+        else:
+            self.fitness = abs(((CC-SC)/(FC-CC))*100)
+    
+    def setFitnessNew(self,gridFitness):
+        SC=0
+        FC=1919
+        i=self.getCell()
+        CC=gridFitness[int(i)]
+        if (FC-CC==0):    #avoid division by zero
+            self.fitness = 200000
         else:
             self.fitness = abs(((CC-SC)/(FC-CC))*100)
 
@@ -275,12 +286,33 @@ for i in range(len(mazeModelTest)):
     if x==20:
         x=0
         y+=1
+
+# def convertToXY(grid_cells):
+grid_XY_cells = []
+for i in range(len(grid_cells)):
+    x=i%20
+    y=i//20
+    grid_XY_cells.append((y,x))
+#print(grid_XY_cells)
+
+grid_fitness=[]
+for cell in grid_XY_cells:
+    y=cell[0]
+    x=cell[1]
+    if y>x:
+        concatenation=str(y)+str(x)
+    else:
+        concatenation=str(x)+str(y)
+    fitness=int(concatenation)
+    grid_fitness.append(fitness)
+#print(grid_fitness)
+
 #---------------------------------------------------------------------------------------------------------------------------
 #Genetic algorithm functions
 
 def fitnessOperation(individuals):
     for individual in individuals:
-        individual.setFitness()
+        individual.setFitnessNew(grid_fitness)
     return individuals
 
 def crossOverOperation(individuals):
@@ -326,13 +358,23 @@ def crossOverOperation(individuals):
         individuals.append(secondChild)
     print ("final len:",len(individuals))
 
-#A corriger!
-def mutationOperation(individuals):
+# #A corriger!
+# def mutationOperation(individuals,mutationRate):
+#     for individual in individuals:
+#         n=random.randint(0,len(individuals)-1)
+#         x=random.randint(0,3)
+#         individual.history[n]=x
+#     return individuals
+def mutationOperation(individuals,mutationRate):
+    #print("nb d'individu a modifier:",len(individuals))
     for individual in individuals:
-        n=random.randint(0,len(individuals)-1)
-        x=random.randint(0,3)
-        individual.history[n]=x
-    return individuals
+        for i in range (len(individual.history)):
+            x=random.randint(0,3)
+            prob=random.randint(1,100)
+            if prob <= mutationRate:
+                individual.history[i]=x
+            
+
 #---------------------------------------------------------------------------------------------------------------------------
 #Individual
 individuals=[]
@@ -344,6 +386,8 @@ maxMove=Slider(610,50,0,1000,'Maximum move per individual:')
 sliders.append(maxMove)
 population=Slider(610,100,0,100,'Population:')
 sliders.append(population)
+mutationRate=Slider(610,150,0,100,'Mutation rate %:')
+sliders.append(mutationRate)
 
 #---------------------------------------------------------------------------------------------------------------------------
 #Buttons
@@ -389,7 +433,9 @@ while True:
     #Parameters can only be changed when it's not simulating
     if not started and nbGeneration==0:
         nbMoveMax=sliders[0].value
-        nbPopulation=sliders[1].value  
+        nbPopulation=sliders[1].value
+        mutationRate=sliders[2].value
+
 
     #Text
     generationTxt=font.render("Generation:"+str(nbGeneration),1,(0,0,0))
@@ -438,6 +484,7 @@ while True:
                 #Genetic
                 fitnessOperation(individuals)
                 crossOverOperation(individuals)
+                mutationOperation(individuals,mutationRate)
                 #put every indivual at the start (10,19)
                 for individual in individuals:
                     individual.x = 0 * cellSize + 15
@@ -450,52 +497,7 @@ while True:
                 previousGenomeMove=movePerGeneration
                 movePerGeneration+=20  
                 nbMove=0
-                print("ready for next gen!")
-    
-    # if started:
-    #     #Useless but in case of (init)
-    #     if nbMove==0:
-    #         #Generate first population
-    #         for i in range(nbPopulation):
-    #             if len(individuals)!=nbPopulation:
-    #                 individuals.append(Individual(10,19)) 
-    #         nbMove+=1
-    #     #Process the simulation
-    #     elif nbMove<=nbMoveMax:
-    #         for individual in individuals:
-    #             if nbGeneration==0:
-    #                 individual.moveRandom()
-    #             else:
-    #                 individual.move(individual.history[nbMove],grid_cells)
-    #             individual.drawIndividual()
-    #         nbMove+=1
-    #     #End of the simulation / reset
-    #     else:
-    #         #Calculate Fitness of every individual
-    #         fitnessOperation(individuals)
-    #         crossOverOperation(individuals)
-    #         mutationOperation(individuals)
-    #         #put every indivual at the start (10,19)
-    #         for individual in individuals:
-    #             individual.x = 10 * cellSize + 15
-    #             individual.y = 19 * cellSize + 15
-    #             individual.cell = individual.getCell()
-    #             individual.drawIndividual()
-
-    #         nbGeneration+=1
-    #         started=False  
-    #         nbMove=0
-    #         nbMoveMax+=20
-        #     #Banc de test
-        #     # print(individuals[0].history,len(individuals[0].history))
-
-        #     # individuals.append(Individual(9,1))
-        #     # individuals[0].fitness=individuals[0].getFitness()
-        #     # print(individuals[0].fitness)
-
-        #     # individuals.append(Individual(9,19))
-        #     # individuals[1].fitness=individuals[1].getFitness()
-        #     # print(individuals[1].fitness)    
+                print("ready for next gen!") 
 
     pygame.display.flip()    
     pygame.display.update()
