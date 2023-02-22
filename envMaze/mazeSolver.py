@@ -7,6 +7,7 @@ import random
 #mazeSolver display 
 pygame.font.init()
 font=pygame.font.Font('envMaze/res/Sunflower.otf',15)
+font1=pygame.font.Font('envMaze/res/Sunflower.otf',40)
 
 displayWidth=900
 displayHeight=600
@@ -87,6 +88,7 @@ class Individual:
         self.cell=self.getCell()
         self.history=[]
         self.fitness=0
+        self.resolved=False
     
     def drawIndividual(self):
         x, y = self.x, self.y
@@ -127,6 +129,8 @@ class Individual:
                     if not cell.walls['left']:
                         self.x += -cellSize
                         self.cell = self.getCell()
+        if self.cell == 399:
+            self.resolved=True
 
     def moveRandom(self):
         x=random.randint(0,3)
@@ -153,7 +157,7 @@ class Individual:
             self.fitness = 200000
         else:
             self.fitness = abs(((CC-SC)/(FC-CC))*100)
-
+        
 #Slider class
 class Slider:
     def __init__(self, x, y,lowerValue,upperValue, description='Default:'):
@@ -340,6 +344,7 @@ def crossOverOperation(individuals):
     print("---------------------- Crossover ---------------------")
     #Delete the half of the individuals with the lowest fitness
     individuals.sort(key=lambda individual: individual.fitness, reverse= True)
+    print("le pire:", individuals[-1].fitness)
     nbDelete=int(len(individuals)/2)
     print("initial len",len(individuals))
     
@@ -349,6 +354,8 @@ def crossOverOperation(individuals):
 
     for i in individuals:
         print(i.fitness)
+    
+    print("le pire 2:", individuals[-1].fitness)
     
     # Create "couple" of parent
     listCouples=[]
@@ -377,6 +384,7 @@ def crossOverOperation(individuals):
         secondChild.history=historySecond
         individuals.append(firstChild)
         individuals.append(secondChild)
+        print("ajouter dans individuals: ",len(individuals))
     print ("final len:",len(individuals))
 
 def mutationOperation(individuals,mutationRate):
@@ -402,6 +410,9 @@ sliders.append(population)
 mutationRate=Slider(610,150,0,100,'Mutation rate %:')
 sliders.append(mutationRate)
 
+#Text
+
+
 #---------------------------------------------------------------------------------------------------------------------------
 #Buttons
 start_img=pygame.image.load('envMaze/res/start.png')
@@ -414,12 +425,15 @@ clock = pygame.time.Clock()
 screen=pygame.display.set_mode((displayWidth,displayHeight))
 pygame.display.set_caption('MazeSolver')
 
+FinalTxt=font1.render("Labyrinthe résolu!",1,(0,0,0))
+
 started=False
 nbGeneration=0
 
 nbMove=0
 movePerGeneration=20
 previousGenomeMove=0
+mazeResolved = False
 
 #Main Loop
 while True:
@@ -454,7 +468,7 @@ while True:
     generationTxt=font.render("Generation:"+str(nbGeneration),1,(0,0,0))
     screen.blit(generationTxt,(610,580))
 
-    nbMoveTxt=font.render("nbMoveMax:"+str(nbMove),1,(0,0,0))
+    nbMoveTxt=font.render("nbMove:"+str(nbMove),1,(0,0,0))
     screen.blit(nbMoveTxt,(750,580))
 
     
@@ -468,7 +482,7 @@ while True:
                 # du coup ca me fait 20 random move au premier et on el apsse à 40 avec un variable previousMove
                 # pour le coup d'apres faire previousMove meme mouvement+ movePerGeneration radom
 
-    if started:
+    if started and not mazeResolved:
         
         #Generate the individuals for the first generation
         if nbGeneration==0:
@@ -476,20 +490,27 @@ while True:
                 if len(individuals)!=nbPopulation:
                     individuals.append(Individual(0,0)) #10,19
         
+        
         if nbMove<=nbMoveMax:   #general security to not exceed to max amount of moves
             if nbMove<movePerGeneration:
-                #-1-Move genome
-                if nbMove<previousGenomeMove:
-                    for individual in individuals:
-                        individual.move(individual.history[nbMove],grid_cells)
-                        individual.drawIndividual()
-                    nbMove+=1
-                #-1-Move random
-                else:
-                    for individual in individuals:
-                        individual.moveRandom()
-                        individual.drawIndividual()
-                    nbMove+=1
+                if not mazeResolved:
+                    #-1-Move genome
+                    if nbMove<previousGenomeMove:
+                        for individual in individuals:
+                            individual.move(individual.history[nbMove],grid_cells)
+                            individual.drawIndividual()
+                            if individual.resolved == True:
+                                mazeResolved=True
+                        nbMove+=1
+                    #-1-Move random
+                    else:
+                        for individual in individuals:
+                            individual.moveRandom()
+                            individual.drawIndividual()
+                            if individual.resolved == True:
+                                mazeResolved=True
+                        nbMove+=1
+                else: print("Labyrinthe résolu")
             
             #End of a generation
             if nbMove==movePerGeneration:
@@ -511,6 +532,9 @@ while True:
                 movePerGeneration+=20  
                 nbMove=0
                 print("ready for next gen!") 
+    
 
+    if mazeResolved:
+        screen.blit(FinalTxt,(200,150))
     pygame.display.flip()    
     pygame.display.update()
