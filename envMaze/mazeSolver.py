@@ -456,7 +456,7 @@ population=Slider(610,100,0,100,'Population:')
 sliders.append(population)
 mutationRate=Slider(610,150,0,100,'Mutation rate (%):')
 sliders.append(mutationRate)
-parentsRate=Slider(610,200,0,100,'Parents keepen (%):')
+parentsRate=Slider(610,200,0,100,'Parents kept (%):')
 sliders.append(parentsRate)
 
 #Text
