@@ -8,7 +8,7 @@ MaeSolver roject from Neural Network and Intelligent system Semester 9 course in
 
 ### Python requirements 
 
-The mazesolver.py python program needs the following librairy to run:
+The ('envMaze/mazeSolver.py) python program needs the following librairy to run:
 
 - pygame
 
