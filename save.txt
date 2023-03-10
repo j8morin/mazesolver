@@ -1,0 +1,39 @@
+# def crossOverOperation(individuals):
+#     print("---------------------- Crossover ---------------------")
+#     #Delete the half of the individuals with the lowest fitness
+#     individuals.sort(key=lambda individual: individual.fitness, reverse= True)
+#     nbDelete=int(len(individuals)/2)
+#     print("initial len",len(individuals))
+#     for i in range(nbDelete):
+#         individuals.pop()
+#     print("delete half",len(individuals))
+    
+#     # Create "couple" of parent
+#     listCouples=[]
+#     for i in range(0,len(individuals)-1,2):
+#         couple=(individuals[i],individuals[i+1])
+#         print (couple[0].fitness,couple[1].fitness)
+#         listCouples.append(couple)
+    
+#     # Create children
+#     print(individuals[0].history)
+#     print("Nombre de couples:",len(listCouples))
+#     for couple in listCouples:
+#         historyFirst=[]
+#         historySecond=[]
+#         firstChild=Individual(10,19)
+#         secondChild=Individual(10,19)
+#         for i in range (len(couple[0].history)):
+#             #addition
+#             historyFirst.append((couple[0].history[i]+couple[1].history[i])%4)
+#             #substraction
+#             if couple[0].history[i]>=couple[1].history[i]:
+#                 historySecond.append((couple[0].history[i]-couple[1].history[i])%4)
+#             else:
+#                 historySecond.append((couple[1].history[i]-couple[0].history[i])%4)
+#         firstChild.history=historyFirst
+#         secondChild.history=historySecond
+#         individuals.append(firstChild)
+#         individuals.append(secondChild)
+#         print("ajouter dans individuals: ",len(individuals))
+#     print ("final len:",len(individuals))

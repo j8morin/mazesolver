@@ -89,6 +89,7 @@ class Individual:
         self.history=[]
         self.fitness=0
         self.resolved=False
+        self.direction=0
     
     def drawIndividual(self):
         x, y = self.x, self.y
@@ -136,6 +137,65 @@ class Individual:
         x=random.randint(0,3)
         self.history.append(x)
         self.move(x,grid_cells)
+
+    def moveRightHeuristic(self):
+        actualCell=self.getCell()
+        for cell in grid_cells:
+            # Si y'a rien en face j'avance, si y'a rien en face et à ma droite je tourne et avance, sinon je tourne
+            if cell.indx==actualCell:
+                if individual.direction == 1:
+                    if not cell.walls['bottom']:
+                        self.y += cellSize
+                        self.cell = self.getCell() 
+                        self.direction = 2
+                    elif not cell.walls['right']:
+                        self.x += cellSize
+                        self.cell = self.getCell()
+                    else:
+                        self.direction -= 1
+                        if self.direction == -1:
+                            self.direction = 3
+
+                elif individual.direction == 2:
+                    if not cell.walls['left']:
+                        self.x += -cellSize
+                        self.cell = self.getCell()
+                        self.direction = 3
+                    elif not cell.walls['bottom']:
+                        self.y += cellSize
+                        self.cell = self.getCell() 
+                    else:
+                        self.direction -= 1
+                        if self.direction == -1:
+                            self.direction = 3
+
+                elif individual.direction == 3:
+                    if not cell.walls['top']:
+                        self.y += -cellSize
+                        self.cell = self.getCell()
+                        self.direction = 0
+                    elif not cell.walls['left']:
+                        self.x += -cellSize
+                        self.cell = self.getCell()
+                    else:
+                        self.direction -= 1
+                        if self.direction == -1:
+                            self.direction = 3
+
+                elif individual.direction == 0:
+                    if not cell.walls['right']:
+                        self.x += cellSize
+                        self.cell = self.getCell()
+                        self.direction = 1
+                    elif not cell.walls['top']:
+                        self.y += -cellSize
+                        self.cell = self.getCell()
+                    else:
+                        self.direction -= 1
+                        if self.direction == -1:
+                            self.direction = 3
+                if self.cell == 399:
+                    self.resolved=True
         
 
     def setFitness(self):
@@ -221,7 +281,6 @@ class Button:
             if pygame.mouse.get_pressed()[0] == 1 and self.clicked == False:
                 self.clicked=True
                 launchFunction=True
-                print('START')
             #On release to make the button clickable again
             if pygame.mouse.get_pressed()[0] == 0:
                 self.clicked=False
@@ -236,7 +295,7 @@ mazeModel=[9,10,10,12,9,12,9,10,10,12,9,14,9,12,9,12,9,12,9,12,
           7,9,10,4,7,5,3,14,9,6,3,10,4,5,7,5,5,5,7,5,
           9,6,11,2,12,5,9,10,2,12,9,10,6,1,12,3,6,5,9,6,
           1,10,8,12,3,4,3,10,12,3,6,11,10,6,3,10,10,6,3,12,
-          5,13,5,3,12,3,14,9,6,9,10,8,10,8,10,12,11,8,10,6,
+          5,13,5,3,12,3,0,0,6,9,10,8,10,8,10,12,11,8,10,6, #0,0 = 14,9
           1,6,3,14,3,10,8,2,10,6,11,6,13,3,12,3,10,6,9,14,
           5,11,12,9,12,9,2,10,12,9,10,12,1,10,6,9,8,10,2,12,
           5,9,6,5,3,6,11,10,6,5,9,6,1,8,10,6,5,9,12,5,
@@ -250,29 +309,8 @@ mazeModel=[9,10,10,12,9,12,9,10,10,12,9,14,9,12,9,12,9,12,9,12,
           3,6,9,6,9,8,10,10,4,5,6,12,3,2,14,3,10,4,3,4,
           9,14,3,12,7,3,12,9,6,5,11,2,12,9,10,12,13,1,12,7,
           5,9,12,5,9,10,6,5,13,5,9,12,3,0,12,1,6,5,3,12,
-          5,5,5,5,3,12,9,6,5,5,7,3,12,5,7,3,12,7,9,6,
-          3,6,3,2,10,6,3,10,6,3,14,11,2,2,10,14,3,10,2,14]
-
-mazeModelTest=[11,12,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,
-               15,3,12,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,
-               15,15,3,12,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,
-               15,15,15,3,12,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,
-               15,15,15,15,3,12,15,15,15,15,15,15,15,15,15,15,15,15,15,15,
-               15,15,15,15,15,3,12,15,15,15,15,15,15,15,15,15,15,15,15,15,
-               15,15,15,15,15,15,3,12,15,15,15,15,15,15,15,15,15,15,15,15, 
-               15,15,15,15,15,15,15,3,12,15,15,15,15,15,15,15,15,15,15,15,
-               15,15,15,15,15,15,15,15,3,12,15,15,15,15,15,15,15,15,15,15,
-               15,15,15,15,15,15,15,15,15,3,12,15,15,15,15,15,15,15,15,15,
-               15,15,15,15,15,15,15,15,15,15,3,12,15,15,15,15,15,15,15,15,
-               15,15,15,15,15,15,15,15,15,15,15,3,12,15,15,15,15,15,15,15,
-               15,15,15,15,15,15,15,15,15,15,15,15,3,12,15,15,15,15,15,15,
-               15,15,15,15,15,15,15,15,15,15,15,15,15,3,12,15,15,15,15,15,
-               15,15,15,15,15,15,15,15,15,15,15,15,15,15,3,12,15,15,15,15,
-               15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,3,12,15,15,15,
-               15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,3,12,15,15,
-               15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,3,12,15,
-               15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,3,12,
-               15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,7]
+          5,5,5,5,3,12,9,6,5,5,7,3,12,5,7,3,12,7,9,5,
+          3,6,3,2,10,6,3,10,6,3,14,11,2,2,10,14,3,10,2,6]
 
 firstMaze =   [11,10,10,10,10,10,12,15,15,15,15,15,15,15,15,15,15,13,15,15,
                15,15,15,15,15,15,5,15,15,15,15,15,9,10,10,10,10,6,15,15,
@@ -340,23 +378,18 @@ def fitnessOperation(individuals):
         individual.setFitnessNew(grid_fitness)
     return individuals
 
-def crossOverOperation(individuals):
+def crossOverOperation(individuals,parentsKeepRate):
     print("---------------------- Crossover ---------------------")
-    #Delete the half of the individuals with the lowest fitness
+    #Delete the good number of parents.
     individuals.sort(key=lambda individual: individual.fitness, reverse= True)
-    print("le pire:", individuals[-1].fitness)
-    nbDelete=int(len(individuals)/2)
-    print("initial len",len(individuals))
-    
+    nbDelete=int(nbPopulation-parentsKeepRate*nbPopulation/100)
+    print("Tu vas en supprimer:", nbDelete)
+
+    #Delete the nbDelete amount of the population
     for i in range(nbDelete):
         individuals.pop()
-    print("delete half",len(individuals))
+    print("après supression:", len(individuals))
 
-    for i in individuals:
-        print(i.fitness)
-    
-    print("le pire 2:", individuals[-1].fitness)
-    
     # Create "couple" of parent
     listCouples=[]
     for i in range(0,len(individuals)-1,2):
@@ -365,9 +398,11 @@ def crossOverOperation(individuals):
         listCouples.append(couple)
     
     # Create children
-    print(individuals[0].history)
-    print("Nombre de couples:",len(listCouples))
+    bestFirstChild = None
+    bestSecondChild = None
+    isFirstChildCreation=True
     for couple in listCouples:
+        
         historyFirst=[]
         historySecond=[]
         firstChild=Individual(10,19)
@@ -382,10 +417,22 @@ def crossOverOperation(individuals):
                 historySecond.append((couple[1].history[i]-couple[0].history[i])%4)
         firstChild.history=historyFirst
         secondChild.history=historySecond
+        if isFirstChildCreation:
+            bestFirstChild = firstChild
+            bestSecondChild = secondChild
+        # for i in range(4):
         individuals.append(firstChild)
         individuals.append(secondChild)
-        print("ajouter dans individuals: ",len(individuals))
+        isFirstChildCreation=False
+    if len(individuals)<nbPopulation:
+        difference = nbPopulation - len(individuals)
+        print()
+        for i in range(int(difference/2)):
+            individuals.append(firstChild)
+            individuals.append(secondChild)
     print ("final len:",len(individuals))
+    
+
 
 def mutationOperation(individuals,mutationRate):
     for individual in individuals:
@@ -407,8 +454,10 @@ maxMove=Slider(610,50,0,1000,'Maximum move per individual:')
 sliders.append(maxMove)
 population=Slider(610,100,0,100,'Population:')
 sliders.append(population)
-mutationRate=Slider(610,150,0,100,'Mutation rate %:')
+mutationRate=Slider(610,150,0,100,'Mutation rate (%):')
 sliders.append(mutationRate)
+parentsRate=Slider(610,200,0,100,'Parents keepen (%):')
+sliders.append(parentsRate)
 
 #Text
 
@@ -416,7 +465,9 @@ sliders.append(mutationRate)
 #---------------------------------------------------------------------------------------------------------------------------
 #Buttons
 start_img=pygame.image.load('envMaze/res/start.png')
+heur_img=pygame.image.load('envMaze/res/heuri.png')
 start_bt = Button(700,400,start_img,0.2)
+heuri_bt = Button(650,300,heur_img,0.6)
 
 #---------------------------------------------------------------------------------------------------------------------------
 #Init pygame
@@ -425,9 +476,10 @@ clock = pygame.time.Clock()
 screen=pygame.display.set_mode((displayWidth,displayHeight))
 pygame.display.set_caption('MazeSolver')
 
-FinalTxt=font1.render("Labyrinthe résolu!",1,(0,0,0))
+FinalTxt=font1.render("Maze solved!",1,(0,0,0))
 
 started=False
+testHeuri=False
 nbGeneration=0
 
 nbMove=0
@@ -456,12 +508,15 @@ while True:
 
     if start_bt.drawButton():
         started=True
+    if heuri_bt.drawButton():
+        testHeuri=True
     
     #Parameters can only be changed when it's not simulating
     if not started and nbGeneration==0:
         nbMoveMax=sliders[0].value
         nbPopulation=sliders[1].value
         mutationRate=sliders[2].value
+        parentsKeepRate=sliders[3].value
 
 
     #Text
@@ -482,6 +537,28 @@ while True:
                 # du coup ca me fait 20 random move au premier et on el apsse à 40 avec un variable previousMove
                 # pour le coup d'apres faire previousMove meme mouvement+ movePerGeneration radom
 
+    #Heuristic method test
+    if testHeuri and not mazeResolved:
+        #Generate the individuals for the first generation 
+        for i in range (nbPopulation):
+                if len(individuals)!=nbPopulation:
+                    individuals.append(Individual(0,0)) #10,19
+        if not mazeResolved:
+            for individual in individuals:
+                if nbMove == 0:
+                    individual.move(1,grid_cells)
+                    individual.history.append(1)
+                    individual.direction=1
+                else:
+                    individual.moveRightHeuristic()
+                individual.drawIndividual()
+                if individual.resolved==True:
+                    mazeResolved=True
+            nbMove += 1
+
+            
+    
+    #AI                
     if started and not mazeResolved:
         
         #Generate the individuals for the first generation
@@ -517,7 +594,7 @@ while True:
                 print('end')
                 #Genetic
                 fitnessOperation(individuals)
-                crossOverOperation(individuals)
+                crossOverOperation(individuals,parentsKeepRate)
                 mutationOperation(individuals,mutationRate)
                 #put every indivual at the start (10,19)
                 for individual in individuals:
