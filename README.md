@@ -1,5 +1,5 @@
 # MazeSolver
-MaeSolver roject from Neural Network and Intelligent system Semester 9 course in Electronical and Computer Engineering School, NTUA.   
+MazeSolver project from Neural Network and Intelligent system Semester 9 course in Electronical and Computer Engineering School, NTUA.   
 
 ### Author
 - Jules Morin
